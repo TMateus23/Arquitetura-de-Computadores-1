@@ -1,0 +1,420 @@
+		
+			
+			#CÓDIGO DOS ALUNOS: DIOGO FERNANDES, 55466 E TOMÁS MATEUS, 55891
+						
+
+
+
+.data
+CROSSHAIR_SIZE: .word 10
+IMAGE_ARRAY: .space 172800
+CROSSHAIR_COLOR: .byte 255, 0, 0
+INPUT_IMAGE: .asciz "starwars.rgb"
+OUTPUT_IMAGE: .asciz "starwars_output.rgb"
+SELECTED_CHARACTER: .asciz "Selecione a personagem:\n1 - Yoda\n2 - Darth Maul\n3 - Mandalorian\nDigite o número do personagem: "
+YODA: .word 1
+DARTHMAUL: .word 2
+MANDALORIAN: .word 3
+HEIGHT: .word 180
+WIDTH: .word 320
+CENTER_OF_MASS_X_YODA: .word 0
+CENTER_OF_MASS_Y_YODA: .word 0
+CENTER_OF_MASS_X_DARTHMAUL: .word 0
+CENTER_OF_MASS_Y_DARTHMAUL: .word 0
+CENTER_OF_MASS_X_MANDALORIAN: .word 0
+CENTER_OF_MASS_Y_MANDALORIAN: .word 0
+
+
+
+.text
+
+
+
+main:
+  			la a1, IMAGE_ARRAY	#aloca espaço de memória 
+  			
+ 			 
+  			la a0, INPUT_IMAGE	# Le o endereço da input image 
+  			jal READ_RGB_IMAGE	# chama a função 
+			
+  			
+  			la a0, SELECTED_CHARACTER	#String para escolher a personagem 
+  			li a7, 4  			#Print string
+ 			ecall		
+
+ 			 
+ 			li a7, 5  # lê o inteiro 
+  			ecall
+  			mv t3, a0  # guarda o valor em t3
+
+			lw a0, YODA	#guarda o valor de YODA em a0
+  			bne t3, a0, DARTHMAUL_CHECK	#if
+  			la a1, IMAGE_ARRAY		
+  			la a2, CENTER_OF_MASS_X_YODA
+  			la a3, CENTER_OF_MASS_Y_YODA
+  			jal LOCATION
+  			la a0, INPUT_IMAGE
+  			la a1, OUTPUT_IMAGE
+  			la a2, CENTER_OF_MASS_X_YODA
+  			la a3, CENTER_OF_MASS_Y_YODA
+  			jal GENERATE_CROSSHAIR_IMAGE
+  			
+  			li a7,10
+  			ecall
+  			
+  			
+  			
+DARTHMAUL_CHECK:
+  			lw a0, DARTHMAUL	#guarda o valor de DARTHMAUL em a0
+  			bne t3, a0, MANDALORIAN_CHECK
+  			la a1, IMAGE_ARRAY
+  			la a2, CENTER_OF_MASS_X_DARTHMAUL
+  			la a3, CENTER_OF_MASS_Y_DARTHMAUL
+  			jal LOCATION
+  			la a0, INPUT_IMAGE
+  			la a1, OUTPUT_IMAGE
+  			la a2, CENTER_OF_MASS_X_DARTHMAUL
+  			la a3, CENTER_OF_MASS_Y_DARTHMAUL
+  			jal GENERATE_CROSSHAIR_IMAGE
+  		
+MANDALORIAN_CHECK:
+  			lw a0, MANDALORIAN	#guarda o valor de MANDALORIAN em a0
+  			bne t3, a0, PROGRAM_END
+  			la a1, IMAGE_ARRAY
+  			la a2, CENTER_OF_MASS_X_MANDALORIAN
+			la a3, CENTER_OF_MASS_Y_MANDALORIAN
+  			jal LOCATION
+  			la a0, INPUT_IMAGE
+  			la a1, OUTPUT_IMAGE
+  			la a2, CENTER_OF_MASS_X_MANDALORIAN
+			la a3, CENTER_OF_MASS_Y_MANDALORIAN
+
+  			jal GENERATE_CROSSHAIR_IMAGE
+  			
+PROGRAM_END:
+			li a7, 10  #termina programa
+			ecall
+  			
+READ_RGB_IMAGE:
+  			li a7, 1024
+  			li a1, 0
+  			la a0, INPUT_IMAGE
+  			ecall
+  			mv s6,a0
+
+
+  			li a7, 63
+  			la a1, IMAGE_ARRAY
+  			li a2, 172800
+  			ecall
+
+			mv a0,s6
+  			li a7, 57
+  			ecall
+  			ret
+
+WRITE_RGB_IMAGE:
+  			li a7, 1024
+  			la a0, OUTPUT_IMAGE
+ 			li a1, 1
+  			ecall
+  			mv s6, a0
+
+  			
+  			li a7, 64
+  			mv a0, s6
+  			la a1, IMAGE_ARRAY
+  			li a2, 172800
+  			ecall
+  			
+
+  			li a7, 57
+  			mv a0, s6
+  			ecall
+  			ret
+
+
+LOCATION:
+ 			# a0 = character
+  			# a1 = image_array
+  			# a2 = center_of_mass_x
+ 			# a3 = center_of_mass_y
+
+	  		li t0, 0   # total de pixels a zero
+			li t1, 0   # total de pixels x
+			li t2, 0   # total de pixels y
+
+			li t3, 0   # coloca y a 0
+			lw t4, HEIGHT
+			li t5, 0   # coloca x a 0
+			lw t6, WIDTH
+	
+			li a2, 172800
+			la a6, IMAGE_ARRAY
+
+CICLO:
+ 	 		lbu s9, 0(a6)   # carrega o valor do componente R
+	  		lbu s10, 1(a6)   # carrega o valor do componente G
+ 	 		lbu s11, 2(a6)  # carrega o valor do componente B
+
+ 	 		addi sp, sp, -44
+ 	 		sw ra, 0(sp)
+ 	 		sw t0, 4(sp)
+ 	 		sw t1, 8(sp)
+  			sw t2, 12(sp)
+  			sw t3, 16(sp)
+			sw t4, 20(sp)
+			sw t5, 24(sp)
+			sw t6, 28(sp)
+			sw a0, 32(sp)
+			sw s9, 36(sp)
+			sw s10, 40(sp)
+			sw s11, 44(sp)
+  
+  			mv a1, s9
+  			mv a2, s10
+  			mv a3, s11
+			jal INDICATOR
+
+ 			lw ra, 0(sp)
+			lw t0, 4(sp)
+			lw t1, 8(sp)
+			lw t2, 12(sp)
+			lw t3, 16(sp)
+			lw t4, 20(sp)
+			lw t5, 24(sp)
+  			lw t6, 28(sp)
+  			lw a0, 32(sp)
+  			lw s9, 36(sp)
+  			lw s10, 40(sp)
+  			lw s11, 44(sp)
+  			addi sp, sp, 44
+  			addi t0, t0, 1
+  			add t1, t1, t1
+  			add t2, t2, t2
+  			addi t5, t5, 1  # incrementa 1
+ 			addi a6,a6,3
+  			addi a2,a2,-3
+  
+  			bnez a2,CICLO
+
+
+
+
+  			# Se t0 for maior que zero, calcula o centro de massa
+  			bgtz t0, CALCULATE_CENTER_OF_MASS
+  			addi a2, a2, -1
+  			addi a3, a3, -1
+  			mv a0, a2
+  			mv a1, a3
+  			ret
+
+CALCULATE_CENTER_OF_MASS:
+ 			div t1, t1, t0  # divide t1 por t0
+  			div t2, t2, t0  # divide t2 por t0
+  			mv a0, t1     # move o resultado da divisão para a0
+  			mv a1, t2     # move o resultado da divisão para a1
+  			ret
+
+
+HUE: 
+			#Função hue
+			#a0: valor do componente vermelho (r)
+			#a1: valor do componente verde (g)
+			#a2: valor do componente azul (b)
+			#Retorna o valor do componente Hue em a0
+		
+		
+				
+			beq a0, a1, TESTECOND1
+	
+	
+TESTECOND1: 
+			beq a1, a2, EXIT_HUE
+			bgt a0, a1, hue_laranja
+			bge a1, a0, hue_verdeamarelado
+			bgt a1, a2, hue_verdeprimavera
+			bge a2, a1, hue_azure
+			bgt a2, a0, hue_violeta
+			j hue_rosa
+	
+	  
+hue_laranja: 
+			bgt a2, a0, RETURN_HUE
+			sub t0, a1, a2 
+			sub t1, a0, a2
+			divu t0, t0, t1 
+			li t1, 60 
+			mul a0, t0, t1 
+			ret
+	
+hue_verdeamarelado:
+			bge a2, a0, RETURN_HUE
+			sub t0, a0, a2 
+			sub t1, a1, a2 
+			divu t0, t0, t1
+			li t1, 60
+			mul t0, t0, t1 
+			li t1, 120 
+			sub a0, t1, t0 
+			ret
+	
+hue_verdeprimavera:
+			bgt a0, a2, RETURN_HUE
+			sub t0, a2, a0 
+			sub t1, a1, a0 
+			divu t0, t0, t1
+			li t1, 60
+			mul t0, t0, t1 
+			li t1, 120 
+			add a0, t1, t0
+			ret
+	
+hue_azure:
+			bge a0, a1, RETURN_HUE
+			sub t0, a1, a0 
+			sub t1, a2, a0 
+			divu t0, t0, t1
+			li t1, 60
+			mul t0, t0, t1 
+			li t1, 240 
+			sub a0, t1, t0
+			ret
+
+hue_violeta:
+			bgt a1, a0, RETURN_HUE
+			sub t0, a0, a1 
+			sub t1, a2, a1 
+			divu t0, t0, t1
+			li t1, 60
+			mul t0, t0, t1 
+			li t1, 240 
+			add a0, t1, t0
+			ret
+	
+hue_rosa:
+			bge a1, a2, RETURN_HUE
+			sub t0, a2, a1 
+			sub t1, a0, a1 
+			divu t0, t0, t1
+			li t1, 60
+			mul t0, t0, t1 
+			li t1, 360 
+			sub a0, t1, t0
+			ret
+		
+EXIT_HUE: 	
+			addi a0, zero, -1
+	
+RETURN_HUE:
+			ret 
+
+INDICATOR:	
+			#personagem = a0; s0 fica com o valor do hue value
+			#r = a1;
+			#g = a2;
+			#b = a3;
+		
+			
+			addi sp, sp, -16	#GURDAR OS VALORES NA PILHA
+			sw ra, 0(sp)	
+			sw a0, 4(sp)
+			sw a1, 8(sp)
+			sw a2, 12(sp)
+			sw a3, 16(sp)
+			mv a0, a1
+			mv a1, a2
+			mv a2, a3
+			jal HUE			# CHAMADA DE OUTRA FUNÇÃO DENTRO DE FUNÇÃO
+			mv s0, a0 
+			lw ra, 0(sp)
+			lw a0, 4(sp)
+			lw a1, 8(sp)
+			lw a2, 12(sp)
+			lw a3, 16(sp)
+			addi sp, sp, 16		#LIBERTA O ESPAÇO DA PILHA
+
+			lw t0, YODA		#GUARDA O VALOR DO YODA
+			lw t1, DARTHMAUL	#GURDA O VALOR DO DARTHMAUL
+			lw t2, MANDALORIAN	#GUARDA O VALOR DO MANDALORIAN
+		
+		
+		
+			beq a0, t0, CHECK_YODA 
+			beq a0, t1, CHECK_DARTHMAUL
+			beq a0, t2, CHECK_MANDALORIAN
+		
+		
+CHECK_YODA:	
+			li t3, 40	#CASO CHAMEM O YODA, VERIFICA SE O HUE RANGE ESTÁ ENTRE [40º, 80º], SE SIM RETORNA 1, CASO NAO ESTEJA RETORNA 0
+			li t4, 80
+			bgt t3, s0, RETURN_INDICATOR	
+			bgt s0, t4, RETURN_INDICATOR 
+			li a0, 1	#RETORNO DE 1 
+			ret
+		
+CHECK_DARTHMAUL:
+			li t3, 0 	#CASO CHAMEM O DARTH VERIFICA SE O HUE RANGE ESTÁ ENTRE [0º, 15], SE ESTIVER RETORN 1, CASO NAO ESTEJA RETORN 0
+			li t4, 15
+			bgt t3, s0, RETURN_INDICATOR
+			bgt s0, t4, RETURN_INDICATOR
+			li a0, 1	#RETORNO DE 1
+			ret
+		
+CHECK_MANDALORIAN:
+			li t3, 160	#CASO CHAMEM O DARTH VERIFICA SE O HUE RANGE ESTÁ ENTRE [160º, 180], SE ESTIVER RETORN 1, CASO NAO ESTEJA RETORN 0
+			li t4, 180 
+			bgt t3, s0, RETURN_INDICATOR
+			bgt s0, t4, RETURN_INDICATOR
+			li a0, 1 	#RETORNO DE 1 
+			ret
+		 
+		 	 
+RETURN_INDICATOR: 	
+			li, a0, 0	#RETORNO DE 0 
+			ret 
+		
+		 
+		
+			
+GENERATE_CROSSHAIR_IMAGE:
+  			# SALVA REGISTOS QUE SERÃO ALTERADOS AO LONGO DA FUNCAO 
+  			addi sp, sp, -16
+  			sw ra, 0(sp)
+  			sw a2, 4(sp)
+  			sw a3, 8(sp)
+
+			# CARREGA OS VALORES 
+  			lw t0, IMAGE_ARRAY
+  			lw t1, CROSSHAIR_SIZE
+
+ 			# centro da imagem
+  			lw t2, WIDTH
+  			srli t3, t2, 1
+  			lw t4, HEIGHT
+  			srli t5, t4, 1
+
+  
+			sub t6, t3, t1  # Crosshair cordenada esquerda
+  			sub s9, t5, t1  # Crosshair cordenada topo
+  			add s10, t3, t1  # Crosshair cordenada direita
+  			add s11, t5, t1  # Crosshair cordenada baixo
+
+   			#DESENHA HORIZONTALMENTE A CRUZ
+  			lw t1, CROSSHAIR_COLOR
+  			mv a2, t6
+ 			mv a3, t5
+  			mv a2, t6
+  			mv a3, s11
+  
+ 	 		#DESENHA VERTICALMENTE A CRUZ
+  			mv a2, t3
+  			mv a3, s9
+  			mv a2, t3
+  			mv a3, s10
+
+  			lw ra, 0(sp)
+  			lw a2, 4(sp)
+  			lw a3, 8(sp)
+  			addi sp, sp, 16
+  			jr ra
